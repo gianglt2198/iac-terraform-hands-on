@@ -134,3 +134,47 @@ resource "aws_instance" "web_server" {
     Terraform = "true"
   }
 }
+
+# Create random id 
+resource "random_id" "randomness" {
+  byte_length = 16
+}
+
+
+# Create bucket S3 
+resource "aws_s3_bucket" "demo_bucket" {
+  bucket = "demo_bucket-${random_id.randomness.hex}"
+
+  tags = {
+    Name      = "demo_bucket"
+    Terraform = "true"
+  }
+}
+
+resource "aws_s3_bucket_ownership_controls" "demo_bucket_acl" {
+  bucket = aws_s3_bucket.demo_bucket.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+# Create security group
+resource "aws_security_group" "demo_security_group" {
+  name        = "web_server_inbound"
+  description = "Allow inbound traffic on tcp/443"
+  vpc_id      = aws_vpc.vpc.id
+
+  ingress {
+    description = "Allow 443 from the Internet"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name      = "demo_web_server_inbound"
+    Terraform = "true"
+  }
+
+}
