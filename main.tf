@@ -7,6 +7,20 @@ provider "aws" {
 # Retrieve the list of AZs in the current AWS region
 data "aws_availability_zones" "available" {}
 data "aws_region" "current" {}
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"]
+}
 
 # Define the VPC
 resource "aws_vpc" "vpc" {
@@ -106,6 +120,17 @@ resource "aws_route_table" "private_route_table" {
 
   tags = {
     Name      = "demo_private_rtb"
+    Terraform = "true"
+  }
+}
+
+# Create EC2 Instance in public subnet
+resource "aws_instance" "web_server" {
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.public_subnets["public_subnet_1"].id
+  tags = {
+    Name      = "demo_instance"
     Terraform = "true"
   }
 }
