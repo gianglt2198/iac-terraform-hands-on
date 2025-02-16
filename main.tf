@@ -22,6 +22,12 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"]
 }
 
+locals {
+  team         = "api_dev"
+  application  = "demo_app"
+  service_name = "ec2-${var.aws_environment}-${var.aws_region}"
+}
+
 # Define the VPC
 resource "aws_vpc" "vpc" {
   cidr_block = var.vpc.cidr
@@ -130,7 +136,9 @@ resource "aws_instance" "web_server" {
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.public_subnets["public_subnet_1"].id
   tags = {
-    Name      = "demo_instance"
+    Name      = local.service_name
+    Owner     = local.team
+    App       = local.service_name
     Terraform = "true"
   }
 }
