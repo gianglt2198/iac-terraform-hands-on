@@ -22,6 +22,17 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"]
 }
 
+data "aws_ami" "ubuntu_22_04" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+
+  owners = ["099720109477"]
+}
+
 locals {
   team         = "api_dev"
   application  = "demo_app"
@@ -35,6 +46,7 @@ resource "aws_vpc" "vpc" {
   tags = {
     Name        = var.vpc.name
     Environment = var.aws_environment
+    Region      = data.aws_region.current.name
     Terraform   = "true"
   }
 }
@@ -132,9 +144,11 @@ resource "aws_route_table" "private_route_table" {
 
 # Create EC2 Instance in public subnet
 resource "aws_instance" "web_server" {
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.public_subnets["public_subnet_1"].id
+  ami                         = data.aws_ami.ubuntu_22_04.id
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.public_subnets["public_subnet_1"].id
+  security_groups             = [aws_security_group.demo_security_group.id]
+  associate_public_ip_address = true
   tags = {
     Name      = local.service_name
     Owner     = local.team
