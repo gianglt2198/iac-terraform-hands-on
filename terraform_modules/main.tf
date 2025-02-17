@@ -21,3 +21,30 @@ module "vpc_md" {
 output "vpc_id" {
   value = module.vpc_md.vpc_id
 }
+
+
+locals {
+  ingress_rules = [{
+    description : "Port 80",
+    port : 80
+    }, {
+    description : "Port 443",
+    port : 443
+  }]
+}
+
+resource "aws_security_group" "main" {
+  name   = "core_sg"
+  vpc_id = module.vpc_md.vpc_id
+
+  dynamic "ingress" {
+    for_each = local.ingress_rules
+    content {
+      description = ingress.value.description
+      from_port   = ingress.value.port
+      to_port     = ingress.value.port
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+}
