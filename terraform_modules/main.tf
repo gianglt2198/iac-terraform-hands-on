@@ -47,4 +47,11 @@ resource "aws_security_group" "main" {
       cidr_blocks = ["0.0.0.0/0"]
     }
   }
+
+  lifecycle {
+    # it's for replacement without destroying depencies or struggling on other dependencies
+    create_before_destroy = true
+    # it's for preveting destroy command
+    prevent_destroy = true
+  }
 }
